@@ -1,6 +1,7 @@
 "use client";
 
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 import React, { useState, useCallback } from 'react';
 
 // --- Mock Icon Components (Replacing Lucide Imports) ---
@@ -43,7 +44,7 @@ const EventDetailsPage = () => {
   const handleShopClick = useCallback((shopId) => {
     console.log(`Navigating to shop details for Event ${id} and Shop ${shopId}`);
     router.push(`/admin/event-proposals/${id}/shops/${shopId}`);
-  }, [id]);
+  }, [id, router]);
   
   const handleNext = () => {
     setCurrentImageIndex((prevIndex) => 
@@ -74,14 +75,14 @@ const EventDetailsPage = () => {
 
         {/* Header Image Area (Slider) */}
         <div className="relative h-64 w-full bg-gray-200">
-            {/* Image using standard img tag with key to force re-render on index change */}
-            <img
+            {/* Image using Next.js Image component */}
+            <Image
               key={currentImageUrl}
               src={currentImageUrl}
               alt={`Event Image ${currentImageIndex + 1}`}
-              className="object-cover w-full h-full transition-opacity duration-500 ease-in-out"
-              // Fallback on error, though not strictly necessary for placeholders
-              onError={(e) => { e.target.onerror = null; e.target.src = "https://placehold.co/1200x600/AAAAAA/FFFFFF?text=Image+Not+Found"; }}
+              fill
+              className="object-cover transition-opacity duration-500 ease-in-out"
+              priority={currentImageIndex === 0}
             />
             
             {/* Carousel Arrows */}
@@ -174,9 +175,9 @@ const EventDetailsPage = () => {
                             className="flex items-center justify-between p-3 border border-gray-200 rounded-xl shadow-sm bg-white cursor-pointer hover:shadow-lg transition-all duration-200 group transform hover:scale-[1.02]"
                         >
                             <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 rounded-lg bg-pink-50 flex items-center justify-center overflow-hidden border">
+                                <div className="w-10 h-10 rounded-lg bg-pink-50 flex items-center justify-center overflow-hidden border relative">
                                     {/* Mock Logo */}
-                                    <img src={shop.logoPlaceholder} width={40} height={40} alt="logo" className="object-cover" />
+                                    <Image src={shop.logoPlaceholder} fill alt="logo" className="object-cover" />
                                 </div>
                                 <span className="text-sm font-semibold text-gray-800 truncate">{shop.name}</span>
                             </div>

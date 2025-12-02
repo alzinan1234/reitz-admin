@@ -88,7 +88,7 @@ const ShopDetailsPage = ({ params }) => {
             <div>
                 <p className="text-xs text-gray-500 mb-1">About the Shop:</p>
                 <p className="text-xs text-gray-600 leading-relaxed text-justify">
-                    Welcome to Fabric Frolic, where creativity meets quality! We offer a vibrant collection of fabrics, threads, and sewing essentials — from soft cottons and elegant silks to bold prints and eco-friendly materials. Whether you're a designer, DIY enthusiast, or just love crafting, Fabric Frolic is your destination for inspiration and premium fabrics.
+                    Welcome to Fabric Frolic, where creativity meets quality! We offer a vibrant collection of fabrics, threads, and sewing essentials &mdash; from soft cottons and elegant silks to bold prints and eco-friendly materials. Whether you&apos;re a designer, DIY enthusiast, or just love crafting, Fabric Frolic is your destination for inspiration and premium fabrics.
                 </p>
             </div>
 

@@ -25,6 +25,7 @@ const NotificationPage = ({ onBackClick }) => {
     const notificationDate = new Date(timestamp);
     const diffMinutes = Math.round((now.getTime() - notificationDate.getTime()) / (1000 * 60));
     const diffHours = Math.round(diffMinutes / 60);
+    
 
     if (diffMinutes < 60) {
       return `${diffMinutes} min ago`;
@@ -76,6 +77,8 @@ const NotificationPage = ({ onBackClick }) => {
       )
     );
   };
+
+    
 
   const NotificationItem = ({ notification }) => {
     const statusClasses = notification.isRead

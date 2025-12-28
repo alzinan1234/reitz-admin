@@ -7,8 +7,8 @@ import { getEventProposals, processEventAction } from '../lib/eventApiClient';
 const EventProposals = () => {
   const router = useRouter();
   const [events, setEvents] = useState([]);
-  const [filteredEvents, setFilteredEvents] = useState([]); // সার্চের জন্য আলাদা স্টেট
-  const [searchTerm, setSearchTerm] = useState(""); // সার্চ ইনপুট স্টেট
+  const [filteredEvents, setFilteredEvents] = useState([]); 
+  const [searchTerm, setSearchTerm] = useState(""); 
   const [loading, setLoading] = useState(true);
 
   const fetchEvents = async () => {
@@ -27,7 +27,7 @@ const EventProposals = () => {
 
   useEffect(() => { fetchEvents(); }, []);
 
-  // সার্চ ফাংশনালিটি হ্যান্ডেল করার জন্য useEffect
+  
   useEffect(() => {
     const results = events.filter(event =>
       event.eventName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -41,7 +41,7 @@ const EventProposals = () => {
     if (confirm(`Are you sure you want to ${action} this event?`)) {
       try {
         await processEventAction(id, action);
-        fetchEvents(); // লিস্ট রিফ্রেশ করা
+        fetchEvents(); 
       } catch (err) { alert("Failed to update status"); }
     }
   };
@@ -53,7 +53,7 @@ const EventProposals = () => {
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold text-gray-800">Event Proposals</h1>
         
-        {/* সার্চ ইনপুট সেকশন */}
+        
         <div className="relative">
           <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
           <input 

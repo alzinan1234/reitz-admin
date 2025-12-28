@@ -40,7 +40,7 @@ const SettingsPage = ({ onBackClick }) => {
     setLoading(true);
     try {
       const response = await settingApiClient.getAllSettings();
-      // আপনার API সরাসরি অ্যারে রিটার্ন করে
+
       if (Array.isArray(response)) {
         const mappedData = {};
         response.forEach(item => {
@@ -50,7 +50,7 @@ const SettingsPage = ({ onBackClick }) => {
           };
         });
         setTabContents(mappedData);
-        // বর্তমানে এক্টিভ ট্যাবের কন্টেন্ট সেট করা
+
         setEditableContent(mappedData[activeTab]?.content || '');
       }
     } catch (error) {
@@ -65,7 +65,7 @@ const SettingsPage = ({ onBackClick }) => {
     fetchAllData();
   }, []);
 
-  // ট্যাব পরিবর্তন হলে এডিটরের ডাটা আপডেট
+
   useEffect(() => {
     if (tabContents[activeTab]) {
       setEditableContent(tabContents[activeTab].content || '');
@@ -81,7 +81,7 @@ const SettingsPage = ({ onBackClick }) => {
     setSaving(true);
     try {
       const response = await settingApiClient.updateSetting(activeTab, editableContent);
-      // রেসপন্স চেক করা (আপনার API অনুযায়ী response.id থাকে)
+     
       if (response && response.id) {
         setTabContents(prev => ({
           ...prev,

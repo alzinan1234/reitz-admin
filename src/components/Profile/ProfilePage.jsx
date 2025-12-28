@@ -1,173 +1,116 @@
 "use client";
-
-import React, { useState, useRef } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import { ArrowLeft } from "lucide-react";
 import { useRouter } from "next/navigation";
+import toast from "react-hot-toast";
+
 import ChangePasswordForm from "./ChangePasswordForm";
+import { userApiClient } from "../lib/userProfileApiClient";
 
 export default function ProfilePage() {
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState("changePassword");
-
+  const [activeTab, setActiveTab] = useState("editProfile");
+  const [userData, setUserData] = useState({ name: "", email: "", phone: "" });
   const [profileImage, setProfileImage] = useState("/image/userImage.png");
+  const [loading, setLoading] = useState(false);
   const fileInputRef = useRef(null);
 
-  const handleBackClick = () => {
-    router.back();
-  };
-
-  const handleImageChange = (event) => {
-    const file = event.target.files[0];
-    if (file) {
-      const newImageUrl = URL.createObjectURL(file);
-      setProfileImage(newImageUrl);
+  useEffect(() => {
+    async function loadProfile() {
+      const res = await userApiClient.getProfile();
+      if (res.success) {
+        setUserData({
+          name: res.data.name || "",
+          email: res.data.email || "",
+          phone: res.data.phone || ""
+        });
+        if (res.data.profile_picture) setProfileImage(res.data.profile_picture);
+      }
     }
-  };
+    loadProfile();
+  }, []);
 
-  const handleImageClick = () => {
-    fileInputRef.current.click();
+  const handleUpdate = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      const formData = new FormData();
+      formData.append("name", userData.name);
+      formData.append("phone", userData.phone);
+      if (fileInputRef.current.files[0]) {
+        formData.append("profile_picture", fileInputRef.current.files[0]);
+      }
+
+      const res = await userApiClient.updateProfile(formData);
+      if (res.success) {
+        toast.success("Profile Updated!");
+        // টপবার আপডেট করার জন্য ইভেন্ট ফায়ার করা
+        window.dispatchEvent(new Event('profileUpdated'));
+      }
+    } catch (err) {
+      toast.error("Update failed");
+    } finally { setLoading(false); }
   };
 
   return (
-    <div className="min-h-screen bg-white text-black flex justify-center items-start pt-8 pb-8 rounded-lg"> {/* Changed bg to white, text to black */}
-      <div
-        className="flex items-center gap-4 cursor-pointer ml-5"
-        onClick={handleBackClick}
-      >
-        <div className="">
-          <ArrowLeft className="text-black bg-[#E0E0E0] rounded-full p-2" size={40} /> {/* Adjusted ArrowLeft background and text color */}
-        </div>
-        <h1 className="text-2xl font-bold">Profile</h1>
-      </div>{" "}
-      <div className="w-full max-w-6xl mx-auto px-4">
-        <div className="p-6">
-          <div className="flex justify-center gap-[18px] items-center mb-6">
-            <div
-              className="relative rounded-full border-4 border-gray-300 cursor-pointer" // Adjusted border color for visibility on white bg
-              onClick={handleImageClick}
-            >
-              <div className="w-[100px] h-[100px] rounded-full overflow-hidden">
-                <Image
-                  src={profileImage}
-                  alt="User Profile"
-                  width={100}
-                  height={100}
-                  className="rounded-full"
-                  style={{ objectFit: "cover" }}
-                />
-              </div>
-              <span className="absolute bottom-0 right-0 bg-blue-500 rounded-full p-1 border-2 border-white"> {/* Adjusted border color to white */}
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-4 w-4 text-white"
-                  viewBox="0 0 20 20"
-                  fill="currentColor"
-                >
-                  <path
-                    fillRule="evenodd"
-                    d="M13.586 3.586a2 2 0 112.828 2.828l-7.793 7.793a.5.5 0 01-.128.093l-3 1a.5.5 0 01-.611-.611l1-3a.5.5 0 01.093-.128l7.793-7.793zM10.707 6.293a1 1 0 00-1.414 1.414L12 9.414l1.293-1.293a1 1 0 00-1.414-1.414L10.707 6.293z"
-                    clipRule="evenodd"
-                  />
-                </svg>
-              </span>
-            </div>
-            <div className="flex flex-col gap-[12px]">
-              <h2 className="text-[24px] font-bold mt-3 text-black">Lukas Wagner</h2> {/* Changed text to black */}
-              <p className="text-black font-[400] text-xl">Admin</p> {/* Changed text to black */}
-            </div>
-          </div>
-          <div className="flex justify-center mb-6">
-            <button
-              className={`py-2 px-6 text-[16px] font-semibold ${
-                activeTab === "editProfile"
-                  ? "border-b-2 border-[#4B697F] text-[#4B697F]"
-                  : "text-gray-600 hover:text-gray-900" // Adjusted text color for non-active tabs
-              }`}
-              onClick={() => setActiveTab("editProfile")}
-            >
-              Edit Profile
-            </button>
-            <button
-              className={`py-2 px-6 text-[16px] font-semibold ${
-                activeTab === "changePassword"
-                  ? "border-b-2 border-[#4B697F] text-[#4B697F]"
-                  : "text-gray-600 hover:text-gray-900" // Adjusted text color for non-active tabs
-              }`}
-              onClick={() => setActiveTab("changePassword")}
-            >
-              Change Password
-            </button>
-          </div>
-
-          <input
-            type="file"
-            ref={fileInputRef}
-            onChange={handleImageChange}
-            style={{ display: "none" }}
-            accept="image/png, image/jpeg, image/jpg"
-          />
-
-          {activeTab === "editProfile" && (
-            <div className="p-6 flex flex-col items-center">
-              <form className="w-full max-w-[982px] ">
-                <div className="mb-4">
-                  <label
-                    htmlFor="fullName"
-                    className="block text-black text-sm font-bold mb-2" // Changed text to black
-                  >
-                    Full Name
-                  </label>
-                  <input
-                    type="text"
-                    id="fullName"
-                    className="shadow appearance-none rounded w-full h-[50px] py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:shadow-outline border border-[#C3C3C3] bg-gray-100" // Changed text and background of input
-                    defaultValue="Lukas Wagner"
-                  />
-                </div>
-                <div className="mb-4">
-                  <label
-                    htmlFor="email"
-                    className="block text-black text-sm font-bold mb-2" // Changed text to black
-                  >
-                    Email
-                  </label>
-                  <input
-                    type="email"
-                    id="email"
-                    className="shadow appearance-none rounded w-full h-[50px] py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:shadow-outline border border-[#C3C3C3] bg-gray-100" // Changed text and background of input
-                    defaultValue="lukas.wagner@example.com"
-                  />
-                </div>
-                <div className="mb-4">
-                  <label
-                    htmlFor="contactNo"
-                    className="block text-black text-sm font-bold mb-2" // Changed text to black
-                  >
-                    Contact No
-                  </label>
-                  <input
-                    type="tel"
-                    id="contactNo"
-                    className="shadow appearance-none rounded w-full h-[50px] py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:shadow-outline border border-[#C3C3C3] bg-gray-100" // Changed text and background of input
-                    defaultValue="+1234567890"
-                  />
-                </div>
-                <div className="flex items-center justify-center mt-6">
-                  <button
-                    type="submit"
-                    className="bg-gradient-to-r from-[#86ACC8] via-[#557F9E] to-[#4B697F] text-white hover:bg-opacity-80 text-white font-bold w-full py-3 px-4 rounded-[4px] focus:outline-none focus:shadow-outline"
-                    
-                  >
-                    Save Changes
-                  </button>
-                </div>
-              </form>
-            </div>
-          )}
-          {activeTab === "changePassword" && <ChangePasswordForm />}
-        </div>
+    <div className="min-h-screen bg-white p-8 rounded-lg">
+      <div className="flex items-center gap-4 mb-8">
+        <button onClick={() => router.back()} className="bg-gray-100 p-2 rounded-full">
+          <ArrowLeft size={24} />
+        </button>
+        <h1 className="text-2xl font-bold text-gray-700">Profile Settings</h1>
       </div>
+
+      <div className="flex flex-col items-center mb-10">
+        <div className="relative w-24 h-24 mb-4 cursor-pointer" onClick={() => fileInputRef.current.click()}>
+          <Image src={profileImage} alt="Profile" fill className="rounded-full object-cover border-4 border-gray-100" />
+          <div className="absolute bottom-0 right-0 bg-blue-600 p-1.5 rounded-full border-2 border-white text-white">
+            <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path d="M13.586 3.586a2 2 0 112.828 2.828l-7.793 7.793a.5.5 0 01-.128.093l-3 1a.5.5 0 01-.611-.611l1-3a.5.5 0 01.093-.128l7.793-7.793z"/></svg>
+          </div>
+        </div>
+        <input type="file" hidden ref={fileInputRef} onChange={(e) => setProfileImage(URL.createObjectURL(e.target.files[0]))} />
+        <h2 className="text-xl font-bold text-gray-700">{userData.name || 'Admin'}</h2>
+      </div>
+
+      <div className="flex justify-center border-b mb-8">
+        {['editProfile', 'changePassword'].map(tab => (
+          <button 
+            key={tab}
+            onClick={() => setActiveTab(tab)}
+            className={`px-8 py-3 font-semibold ${activeTab === tab ? 'border-b-2 border-[#4B697F] text-[#4B697F]' : 'text-gray-700'}`}
+          >
+            {tab === 'editProfile' ? 'Edit Profile' : 'Change Password'}
+          </button>
+        ))}
+      </div>
+
+      {activeTab === 'editProfile' ? (
+        <form onSubmit={handleUpdate} className="max-w-2xl mx-auto space-y-6">
+          <div>
+            <label className="block text-sm font-bold text-gray-700 mb-2">Full Name</label>
+            <input 
+              className="w-full p-3 border rounded-lg bg-gray-50 text-gray-700" 
+              value={userData.name}
+              onChange={(e) => setUserData({...userData, name: e.target.value})}
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-bold text-gray-700 mb-2">Phone</label>
+            <input 
+              className="w-full p-3 border rounded-lg bg-gray-50 text-gray-700" 
+              value={userData.phone}
+              onChange={(e) => setUserData({...userData, phone: e.target.value})}
+            />
+          </div>
+          <button 
+            disabled={loading}
+            className="w-full py-3 bg-[#557F9E] text-white rounded-lg font-bold hover:opacity-90 transition"
+          >
+            {loading ? "Saving..." : "Save Changes"}
+          </button>
+        </form>
+      ) : <ChangePasswordForm />}
     </div>
   );
 }

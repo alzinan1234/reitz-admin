@@ -1,0 +1,51 @@
+// ============================================
+// FILE: config/api.js
+// Purpose: Centralized API Configuration & Endpoints
+// ============================================
+
+const API_BASE_URL = "https://atm-reply-cast-shipment.trycloudflare.com";
+
+export const API_ENDPOINTS = {
+  // Authentication Endpoints
+  AUTH: {
+    LOGIN: `${API_BASE_URL}/api/auth/login/`,
+    SEND_OTP: `${API_BASE_URL}/api/auth/resend-otp/`,
+    VERIFY_OTP: `${API_BASE_URL}/api/auth/password/reset-verify-otp/`,
+    RESET_PASSWORD: `${API_BASE_URL}/api/auth/password/reset-confirm/`,
+    CHANGE_PASSWORD: `${API_BASE_URL}/api/auth/password/change/`,
+    VERIFY_EMAIL: `${API_BASE_URL}/api/auth/verify-email/`,
+    RESET_PASSWORD_REQUEST: `${API_BASE_URL}/api/auth/password/reset-request/`,
+  },
+  
+  // Dashboard/Revenue Endpoints
+  DASHBOARD: {
+    EARNINGS_OVERVIEW: `${API_BASE_URL}/api/revenue/admin/earnings-overview/`,
+    ALL_PAYMENTS: `${API_BASE_URL}/api/revenue/admin/all-payments/`,
+    REVENUE_STATS: `${API_BASE_URL}/api/revenue/admin/revenue-stats/`,
+    TOP_ADMINS: `${API_BASE_URL}/api/revenue/admin/top-admins/`,
+  },
+
+   // User Management Endpoints
+  USER_MANAGEMENT: {
+    GET_ALL_USERS: `${API_BASE_URL}/api/auth/admin/users/`,
+    GET_USER_DETAILS: `${API_BASE_URL}/api/auth/admin/users/{{USER_ID}}/`,
+    BLOCK_USER: `${API_BASE_URL}/api/auth/admin/users/block/`,
+    UNBLOCK_USER: `${API_BASE_URL}/api/auth/admin/users/unblock/`,
+  },
+
+  EVENTS: {
+    GET_PROPOSALS: `${API_BASE_URL}/api/shopadmin/admin/events/proposals/`,
+    GET_DETAILS: (id) => `${API_BASE_URL}/api/shopadmin/admin/events/${id}/`,
+    APPROVE_REJECT: (id) => `${API_BASE_URL}/api/shopadmin/admin/events/${id}/approve-reject/`,
+  },
+
+
+LEGAL: {
+    GET_SETTINGS: `${API_BASE_URL}/api/core/settings/`, //
+    UPDATE_SETTING: (slug) => `${API_BASE_URL}/api/core/settings/${slug}/`, //
+  }
+
+
+};
+
+export default API_BASE_URL;

@@ -2,7 +2,12 @@
 const nextConfig = {
   reactStrictMode: true,
   images: {
-    domains: ["via.placeholder.com", "images.unsplash.com", "placehold.co"], // Add the domain for external images
+    domains: [
+      "via.placeholder.com",
+      "images.unsplash.com",
+      "placehold.co",
+      "atm-reply-cast-shipment.trycloudflare.com"
+    ],
   },
 };
 

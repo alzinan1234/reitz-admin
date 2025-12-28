@@ -1,135 +1,164 @@
-// components/SettingsPage.js
 'use client';
 
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { ArrowLeftIcon } from '@heroicons/react/24/outline'; // Only ArrowLeftIcon is needed
+import { ArrowLeftIcon } from '@heroicons/react/24/outline';
 import dynamic from 'next/dynamic';
+import toast from 'react-hot-toast';
+import { settingApiClient } from '../lib/settingApiClient';
 
-// Updated contentData - removed 'faqs'
-const contentData = {
-  'privacy-security': {
-    title: 'Privacy Policy',
-    date: 'Dec 4, 2019 21:42',
-    text: `<h1>Privacy Policy</h1><p>1. Information We Collect</p>`,
-  },
-  'terms-conditions': {
-    title: 'Terms & Conditions',
-    date: 'Dec 4, 2019 21:42',
-    text: `<h1>Terms & Conditions</h1><p>1. Acceptance of Terms</p><p>By accessing or using our Service, you agree to be bound by these Terms. If you disagree with any part of the terms then you may not access the Service.</p><p>2. Intellectual Property</p><p>The Service and its original content, features and functionality are and will remain the exclusive property of [Your Company Name] and its licensors.</p><p>3. Links To Other Web Sites</p><p>Our Service may contain links to third-party web sites or services that are not owned or controlled by [Your Company Name].</p><p>[Your Company Name] has no control over, and assumes no responsibility for, the content, privacy policies, or practices of any third party web sites or services. You further acknowledge and agree that [Your Company Name] shall not be responsible or liable, directly or indirectly, for any damage or loss caused or alleged to be caused by or in connection with use of or reliance on any such content, goods or services available on or through any such web sites or services.</p><p>4. Termination</p><p>We may terminate or suspend access to our Service immediately, without prior notice or liability, for any reason whatsoever, including without limitation if you breach the Terms.</p><p>All provisions of the Terms which by their nature should survive termination shall survive termination, including, without limitation, ownership provisions, warranty disclaimers, indemnity and limitations of liability.</p><p>5. Disclaimer</p><p>Your use of the Service is at your sole risk. The Service is provided on an "AS IS" and "AS AVAILABLE" basis. The Service is provided without warranties of any kind, whether express or implied, including, but not limited to, implied warranties of merchantability, fitness for a particular purpose, non-infringement or course of performance.</p><p>6. Governing Law</p><p>These Terms shall be governed and construed in accordance with the laws of [Your Country/State], without regard to its conflict of law provisions.</p><p>Our failure to enforce any right or provision of these Terms will not be considered a waiver of those rights. If any provision of these Terms is held to be invalid or unenforceable by a court, the remaining provisions of these Terms will remain in effect. These Terms constitute the entire agreement between us regarding our Service, and supersede and replace any prior agreements we might have between us regarding the Service.</p><p>7. Changes</p><p>We reserve the right, at our sole discretion, to modify or replace these Terms at any time. If a revision is material we will try to provide at least 30 days notice prior to any new terms taking effect. What constitutes a material change will be determined at our sole discretion.</p><p>By continuing to access or use our Service after those revisions become effective, you agree to be bound by the revised terms. If you do not agree to the new terms, please stop using the Service.</p>`,
-  },
-  'about-us': {
-    title: 'About Us',
-    date: 'Dec 4, 2019 21:42',
-    text: `<h1>Welcome to [Your Company Name]!</h1><p>We are dedicated to providing you with the best [type of service/product] experience. Our mission is to [brief mission statement].</p><p>Founded in [Year], [Your Company Name] has come a long way from its beginnings in [starting location]. When [founder's name] first started out, their passion for [passion that drove them to start the business] drove them to start their own business, and gave them the impetus to turn hard work and inspiration into to a booming online store. We now serve customers all over [region/world], and are thrilled to be a part of the [industry type] industry.</p><p>We hope you enjoy our products/services as much as we enjoy offering them to you. If you have any questions or comments, please don't hesitate to contact us.</p><p>Sincerely,</p><p>The [Your Company Name] Team</p>`,
-  },
-};
 
-const JoditEditor = dynamic(() => import('jodit-react'), { ssr: false });
+const JoditEditor = dynamic(() => import('jodit-react'), { 
+  ssr: false,
+  loading: () => <div className="h-[500px] bg-gray-100 animate-pulse rounded-lg" />
+});
 
 const SettingsPage = ({ onBackClick }) => {
   const editor = useRef(null);
-  const [activeTab, setActiveTab] = useState('privacy-security');
-  const [editableContent, setEditableContent] = useState('');
-  // Removed faqs and selectedFaq states
-  // const [faqs, setFaqs] = useState(contentData.faqs.questions || []);
-  // const [selectedFaq, setSelectedFaq] = useState(faqs.length > 0 ? faqs[0] : null);
-  const [tabContents, setTabContents] = useState(contentData);
+  const tabs = [
+    { id: 'privacy_policy', label: 'Privacy Policy' },
+    { id: 'terms_conditions', label: 'Terms & Conditions' },
+    { id: 'about_us', label: 'About Us' },
+  ];
 
-  useEffect(() => {
-    // Simplified useEffect as 'faqs' tab is removed
-    setEditableContent(tabContents[activeTab].text);
-  }, [activeTab, tabContents]);
+  const [activeTab, setActiveTab] = useState(tabs[0].id);
+  const [editableContent, setEditableContent] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [tabContents, setTabContents] = useState({});
 
   const joditConfig = useMemo(() => ({
     readonly: false,
+    placeholder: 'Start typing content...',
+    height: 500,
+    toolbarAdaptive: false,
+    useSearch: false,
     spellcheck: false,
-    buttons: 'undo,redo,|,bold,italic,underline,strikethrough,|,ul,ol,|,link,cut,copy,paste,|,align,|,source',
-    theme: 'light', // Changed theme to light for white background
-    toolbarButtonSize: 'large',
   }), []);
 
-  const handleSaveAndChange = () => {
-    // Simplified save logic as 'faqs' tab is removed
-    setTabContents(prev => ({
-      ...prev,
-      [activeTab]: { ...prev[activeTab], text: editableContent },
-    }));
-    showConfirmation(`Content for "${tabContents[activeTab].title}" saved!`);
+  // ডাটা লোড করার মেইন ফাংশন
+  const fetchAllData = async () => {
+    setLoading(true);
+    try {
+      const response = await settingApiClient.getAllSettings();
+      // আপনার API সরাসরি অ্যারে রিটার্ন করে
+      if (Array.isArray(response)) {
+        const mappedData = {};
+        response.forEach(item => {
+          mappedData[item.setting_type] = {
+            content: item.content,
+            last_updated: item.last_updated
+          };
+        });
+        setTabContents(mappedData);
+        // বর্তমানে এক্টিভ ট্যাবের কন্টেন্ট সেট করা
+        setEditableContent(mappedData[activeTab]?.content || '');
+      }
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to load settings data");
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const showConfirmation = (message) => {
-    const confirmDialog = document.createElement('div');
-    confirmDialog.className = 'fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50';
-    confirmDialog.innerHTML = `
-      <div class="bg-white p-6 rounded-lg shadow-lg text-black"> {/* Changed bg to white, text to black */}
-        <p class="mb-4">${message}</p>
-        <button id="confirmOkBtn" class="bg-cyan-400 hover:bg-cyan-300 text-white py-2 px-4 rounded-[4px] border-b-4 border-cyan-500">OK</button> {/* Adjusted border color for light theme */}
-      </div>
-    `;
-    document.body.appendChild(confirmDialog);
-    document.getElementById('confirmOkBtn').onclick = () => {
-      document.body.removeChild(confirmDialog);
-    };
+  useEffect(() => {
+    fetchAllData();
+  }, []);
+
+  // ট্যাব পরিবর্তন হলে এডিটরের ডাটা আপডেট
+  useEffect(() => {
+    if (tabContents[activeTab]) {
+      setEditableContent(tabContents[activeTab].content || '');
+    }
+  }, [activeTab, tabContents]);
+
+  const handleSave = async () => {
+    if (!editableContent.trim()) {
+      toast.error("Content cannot be empty");
+      return;
+    }
+
+    setSaving(true);
+    try {
+      const response = await settingApiClient.updateSetting(activeTab, editableContent);
+      // রেসপন্স চেক করা (আপনার API অনুযায়ী response.id থাকে)
+      if (response && response.id) {
+        setTabContents(prev => ({
+          ...prev,
+          [activeTab]: {
+            content: response.content,
+            last_updated: response.last_updated
+          }
+        }));
+        toast.success(`${tabs.find(t => t.id === activeTab).label} Updated Successfully!`);
+      }
+    } catch (error) {
+      toast.error("Error updating settings");
+    } finally {
+      setSaving(false);
+    }
   };
 
-  // Removed all FAQ-related handler functions:
-  // handleQuestionChange, handleFaqSelection, handleAddFaq, handleDeleteFaq
+  if (loading) return (
+    <div className="flex h-screen items-center justify-center">
+      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#557F9E]"></div>
+    </div>
+  );
 
   return (
-    <div className="bg-white rounded-2xl min-h-screen text-black p-6 sm:p-6 lg:p-8 font-inter"> {/* Changed bg to white, text to black */}
-      <div className="flex items-center mb-6">
-        {onBackClick && (
-          <button onClick={onBackClick} className="text-gray-600 hover:text-black mr-4" aria-label="Go back"> {/* Adjusted text colors */}
+    <div className="bg-white rounded-2xl min-h-screen p-6 font-inter text-gray-800">
+      <div className="flex items-center justify-between mb-8">
+        <div className="flex items-center gap-4">
+          <button onClick={onBackClick} className="p-2 hover:bg-gray-100 rounded-full">
             <ArrowLeftIcon className="h-6 w-6" />
           </button>
-        )}
-        <h1 className="text-2xl sm:text-3xl font-bold">Settings</h1>
-      </div>
-
-      <div className="border-b border-gray-300"> {/* Adjusted border color */}
-        <div className="md:w-full flex justify-start bg-gray-100 rounded-t-lg overflow-x-auto scrollbar-hide"> {/* Adjusted bg color */}
-          {['privacy-security', 'terms-conditions', 'about-us'].map((tabId) => ( // Removed 'faqs' tab
-            <button
-              key={tabId}
-              className={`flex-shrink-0 px-4 py-4 text-lg font-medium relative ${
-                activeTab === tabId ? 'text-[#557F9E]' : 'text-gray-600 hover:text-black' // Adjusted text colors
-              }`}
-              onClick={() => setActiveTab(tabId)}
-            >
-              {tabContents[tabId].title}
-              {activeTab === tabId && (
-                <span className="absolute bottom-0 left-0 right-0 h-[2px] -mb-[1px] bg-[#557F9E]"></span>
-              )}
-            </button>
-          ))}
+          <h1 className="text-2xl font-bold">Legal Settings</h1>
         </div>
+        <button onClick={fetchAllData} className="text-sm px-4 py-2 bg-gray-50 rounded-md">
+          Refresh Data
+        </button>
       </div>
 
-      <div className="bg-gray-50 p-4 rounded-b-lg -mt-px"> {/* Adjusted bg color */}
-        {/* Only show content for non-FAQ tabs */}
-        <>
-          <h2 className="text-xl font-semibold mb-1">{tabContents[activeTab].title}</h2>
-          <p className="text-sm text-gray-600 mb-4">{tabContents[activeTab].date}</p> {/* Adjusted text color */}
-          <div className="rounded-md mb-6 py-2">
-            <JoditEditor
-              className="jodit-custom-theme"
-              ref={editor}
-              value={editableContent}
-              config={joditConfig}
-              onChange={(newContent) => setEditableContent(newContent)}
-            />
-          </div>
-        </>
-
-        <div className="col-span-full mt-4">
+      <div className="flex border-b border-gray-200 mb-6 overflow-x-auto">
+        {tabs.map((tab) => (
           <button
-            type="button"
-            onClick={handleSaveAndChange}
-            className="w-full mx-auto flex justify-center items-center rounded-[4px] bg-gradient-to-r from-[#86ACC8] via-[#557F9E] to-[#4B697F] text-white py-2 font-medium" // Adjusted hover color
+            key={tab.id}
+            onClick={() => setActiveTab(tab.id)}
+            className={`px-6 py-3 font-medium transition-colors border-b-2 whitespace-nowrap ${
+              activeTab === tab.id ? 'border-[#557F9E] text-[#557F9E]' : 'border-transparent text-gray-500'
+            }`}
           >
-            Save & Change
+            {tab.label}
           </button>
-        </div>
+        ))}
+      </div>
+
+      <div className="mb-4">
+        <h2 className="text-lg font-semibold">{tabs.find(t => t.id === activeTab).label}</h2>
+        <p className="text-xs text-gray-500">
+          Last Updated: {tabContents[activeTab]?.last_updated 
+            ? new Date(tabContents[activeTab].last_updated).toLocaleString() 
+            : 'Never'}
+        </p>
+      </div>
+
+      <div className="border border-gray-300 rounded-lg overflow-hidden bg-white shadow-sm">
+        <JoditEditor
+          ref={editor}
+          value={editableContent}
+          config={joditConfig}
+          onBlur={newContent => setEditableContent(newContent)}
+        />
+      </div>
+
+      <div className="mt-6 flex justify-end">
+        <button
+          onClick={handleSave}
+          disabled={saving}
+          className="min-w-[140px] px-8 py-3 bg-[#557F9E] text-white rounded-lg disabled:bg-gray-400"
+        >
+          {saving ? 'Saving...' : 'Save Changes'}
+        </button>
       </div>
     </div>
   );

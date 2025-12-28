@@ -1,4 +1,4 @@
-// app/vendor/earnings/[id]/page.js
+// app/admin/earning/[id]/page.js
 "use client";
 
 import React, { useState, useEffect } from 'react';
@@ -6,77 +6,128 @@ import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { X } from 'lucide-react';
 
-// Import your dummy data (assuming you have a centralized data source)
-// For demonstration, I'll copy the relevant dummy data structure here.
-// In a real application, you'd import 'mockOrders' or 'dummyWeeklyData' directly.
-const allTransactions = [
-    ...Array.from({ length: 90 }).map((_, i) => ({
-        serial: `INV093${i}`,
-        userName: "Nothing Studio",
-        userType: "Service provider",
-        subscriptionType: "Annual Fee",
-        amount: 50,
-        accNumber: `4548465446`,
-        date: `Aug. 15, 2023 02:29 PM`,
-        fullName: "Jane Cooper",
-        email: "abc@example.com",
-        phone: "(319) 555-0115",
-        transactionID: `TXN${100000 + i}`,
-        accHolderName: "Wade Warren",
-        receivedAmount: 50,
-        detectPercentage: 10,
-        finalAmount: 45,
-        userImagePath: "/image/user-photo.png",
-    })),
-    ...Array.from({ length: 75 }).map((_, i) => ({
-        serial: `INV094${i}`,
-        userName: "Design Co.",
-        userType: "Agency",
-        subscriptionType: "Monthly Subscription",
-        amount: 150,
-        accNumber: `987654321${i % 10}`,
-        date: `Sep. 01, 2023 10:00 AM`,
-        fullName: "John Doe",
-        email: "john.doe@example.com",
-        phone: "(123) 456-7890",
-        transactionID: `TXN${200000 + i}`,
-        accHolderName: "Alice Smith",
-        receivedAmount: 150,
-        detectPercentage: 15,
-        finalAmount: 127.5,
-        userImagePath: "/image/user-photo.png",
-    })),
-];
-
+import toast from 'react-hot-toast';
+import apiCall from '@/components/lib/apiClient';
+import { API_ENDPOINTS } from '@/components/lib/api';
 
 const TransactionDetailsPage = ({ params }) => {
     const router = useRouter();
-    const { id } = params; // Get the transaction ID from the URL
+    const { id } = params;
     const [transaction, setTransaction] = useState(null);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
 
     useEffect(() => {
         if (id) {
-            // In a real application, you would fetch this from an API
-            // For now, we'll find it in our combined dummy data
-            const foundTransaction = allTransactions.find(t => t.transactionID === id);
-            setTransaction(foundTransaction);
+            fetchTransactionDetails();
         }
     }, [id]);
 
-    const handleClose = () => {
-        router.back(); // Go back to the previous page (EarningsTable)
+    const fetchTransactionDetails = async () => {
+        try {
+            setLoading(true);
+            setError(null);
+
+            // Fetch all payments and find the matching one
+            const response = await apiCall(
+                API_ENDPOINTS.DASHBOARD.ALL_PAYMENTS,
+                "GET"
+            );
+
+            if (response && response.payments && Array.isArray(response.payments)) {
+                // Extract transaction ID number from URL parameter (e.g., TXN1 -> 1)
+                const transactionIdNum = id.replace('TXN', '');
+                
+                // Find matching payment
+                const foundPayment = response.payments.find(
+                    p => p.id.toString() === transactionIdNum
+                );
+
+                if (foundPayment) {
+                    // Transform API data to transaction format
+                    const transformedTransaction = {
+                        serial: `INV${foundPayment.id}`,
+                        userName: foundPayment.event_name || "N/A",
+                        userType: foundPayment.platform || "N/A",
+                        subscriptionType: foundPayment.status || "N/A",
+                        amount: parseFloat(foundPayment.amount_paid) || 0,
+                        accNumber: foundPayment.store_transaction_id || "N/A",
+                        date: new Date(foundPayment.payment_date).toLocaleString() || "N/A",
+                        fullName: foundPayment.admin_name || "Administrator",
+                        email: foundPayment.admin_email || "N/A",
+                        phone: "N/A",
+                        transactionID: `TXN${foundPayment.id}`,
+                        accHolderName: foundPayment.event_admin || "N/A",
+                        receivedAmount: parseFloat(foundPayment.amount_paid) || 0,
+                        detectPercentage: 0,
+                        finalAmount: parseFloat(foundPayment.amount_paid) || 0,
+                        userImagePath: "/image/user-photo.png",
+                        status: foundPayment.status,
+                        currency: foundPayment.currency || "USD",
+                        platform: foundPayment.platform,
+                        revenuecat_transaction_id: foundPayment.revenuecat_transaction_id,
+                        verified_at: foundPayment.verified_at,
+                        refunded_at: foundPayment.refunded_at,
+                    };
+                    setTransaction(transformedTransaction);
+                } else {
+                    setError("Transaction not found");
+                    toast.error("Transaction not found");
+                }
+            } else {
+                setError("Failed to load transaction data");
+                toast.error("Failed to load transaction data");
+            }
+        } catch (err) {
+            console.error("Error fetching transaction:", err);
+            setError(err.message || "An error occurred");
+            toast.error(err.message || "An error occurred");
+        } finally {
+            setLoading(false);
+        }
     };
 
-    if (!transaction) {
+    const handleClose = () => {
+        router.back();
+    };
+
+    if (loading) {
         return (
             <div className="min-h-screen flex items-center justify-center bg-gray-100 text-gray-800">
-                <p>Loading transaction details or transaction not found...</p>
+                <p>Loading transaction details...</p>
             </div>
         );
     }
 
-    // Determine the user image to display
-    const userImage = transaction.userImagePath || "/image/default-user.png"; // Fallback if userImagePath is missing
+    if (error || !transaction) {
+        return (
+            <div className="relative min-h-screen bg-gray-100 flex items-center justify-center p-4">
+                <style jsx global>{`
+                    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+                    body {
+                        font-family: 'Inter', sans-serif;
+                    }
+                `}</style>
+                <div className="relative bg-white rounded-xl shadow-lg p-6 max-w-md w-full sm:p-8">
+                    <button
+                        onClick={handleClose}
+                        className="absolute -top-3 -right-3 w-10 h-10 bg-[#4B697F] rounded-full flex items-center justify-center shadow-md hover:bg-red-700 transition-colors duration-200"
+                    >
+                        <X className="text-white" size={24} strokeWidth={2} />
+                    </button>
+                    <p className="text-red-500 mb-4">{error || "Transaction not found"}</p>
+                    <button
+                        onClick={handleClose}
+                        className="w-full px-4 py-2 bg-[#4B697F] text-white rounded hover:bg-opacity-90"
+                    >
+                        Go Back
+                    </button>
+                </div>
+            </div>
+        );
+    }
+
+    const userImage = transaction.userImagePath || "/image/default-user.png";
 
     return (
         <div className="relative min-h-screen bg-gray-100 flex items-center justify-center p-4">
@@ -87,7 +138,7 @@ const TransactionDetailsPage = ({ params }) => {
                 }
             `}</style>
             <div className="relative bg-white rounded-xl shadow-lg p-6 max-w-md w-full sm:p-8">
-                {/* Close Button (Red Circle with White X) */}
+                {/* Close Button */}
                 <button
                     onClick={handleClose}
                     className="absolute -top-3 -right-3 w-10 h-10 bg-[#4B697F] rounded-full flex items-center justify-center shadow-md hover:bg-red-700 transition-colors duration-200"
@@ -104,47 +155,104 @@ const TransactionDetailsPage = ({ params }) => {
                             width={100}
                             height={100}
                             className="rounded-full object-cover border border-gray-200"
-                            onError={(e) => { e.target.onerror = null; e.target.src = "/image/default-user.png"; }} // Fallback image if userImagePath fails
-                            unoptimized // Add unoptimized if image optimization causes issues with external URLs
+                            onError={(e) => {
+                                e.target.onerror = null;
+                                e.target.src = "/image/default-user.png";
+                            }}
+                            unoptimized
                         />
                     </div>
 
                     {/* User Details */}
                     <div className="text-center sm:text-left">
-                        <p className="text-gray-800 text-lg font-semibold mb-1">Full name : {transaction.fullName}</p>
-                        <p className="text-gray-600 text-sm mb-1">Email: {transaction.email}</p>
-                        <p className="text-gray-600 text-sm">Phone number: {transaction.phone}</p>
+                        <p className="text-gray-800 text-lg font-semibold mb-1">
+                            Full name : {transaction.fullName}
+                        </p>
+                        <p className="text-gray-600 text-sm mb-1">
+                            Email: {transaction.email}
+                        </p>
+                        <p className="text-gray-600 text-sm">
+                            Phone number: {transaction.phone}
+                        </p>
                     </div>
                 </div>
 
-                <h3 className="text-gray-800 text-xl font-bold mb-4 border-b pb-2 border-gray-200">Transaction Details :</h3>
+                <h3 className="text-gray-800 text-xl font-bold mb-4 border-b pb-2 border-gray-200">
+                    Transaction Details :
+                </h3>
 
-                {/* Transaction Details */}
+                {/* Transaction Details Grid */}
                 <div className="grid grid-cols-2 gap-y-3 text-sm">
                     <p className="text-gray-600 font-medium">Transaction ID :</p>
-                    <p className="text-right text-gray-800 font-semibold">{transaction.transactionID}</p>
+                    <p className="text-right text-gray-800 font-semibold">
+                        {transaction.transactionID}
+                    </p>
 
-                    <p className="text-gray-600 font-medium">A/C holder name:</p>
-                    <p className="text-right text-gray-800">{transaction.accHolderName}</p>
-
-                    <p className="text-gray-600 font-medium">A/C number:</p>
+                    <p className="text-gray-600 font-medium">Event Name:</p>
                     <p className="text-right text-gray-800">
-                        {/* Mask account number */}
+                        {transaction.userName}
+                    </p>
+
+                    <p className="text-gray-600 font-medium">Platform:</p>
+                    <p className="text-right text-gray-800">
+                        {transaction.platform}
+                    </p>
+
+                    <p className="text-gray-600 font-medium">Status:</p>
+                    <p className="text-right">
+                        <span className={`px-2 py-1 rounded text-xs font-semibold ${
+                            transaction.status === "completed"
+                                ? "bg-green-100 text-green-700"
+                                : transaction.status === "pending"
+                                ? "bg-yellow-100 text-yellow-700"
+                                : "bg-red-100 text-red-700"
+                        }`}>
+                            {transaction.status.charAt(0).toUpperCase() +
+                                transaction.status.slice(1)}
+                        </span>
+                    </p>
+
+                    <p className="text-gray-600 font-medium">Amount Paid:</p>
+                    <p className="text-right text-gray-800">
+                        {transaction.currency} {transaction.receivedAmount.toFixed(2)}
+                    </p>
+
+                    <p className="text-gray-600 font-medium">Store Transaction ID:</p>
+                    <p className="text-right text-gray-800 text-xs">
                         {transaction.accNumber ? `**** **** *${transaction.accNumber.slice(-3)}` : 'N/A'}
                     </p>
 
-                    <p className="text-gray-600 font-medium">Received amount:</p>
-                    <p className="text-right text-gray-800">${transaction.receivedAmount.toFixed(2)}</p>
-
-                    <p className="text-gray-600 font-medium">Detect Percentage:</p>
-                    <p className="text-right text-gray-800">
-                        {/* Assuming detectPercentage is a number representing a dollar amount here */}
-                        ${transaction.detectPercentage.toFixed(2)}
+                    <p className="text-gray-600 font-medium">RevenueCat ID:</p>
+                    <p className="text-right text-gray-800 text-xs">
+                        {transaction.revenuecat_transaction_id ? 
+                            transaction.revenuecat_transaction_id.slice(0, 20) + '...' 
+                            : 'N/A'}
                     </p>
 
-                    <p className="text-gray-800 font-semibold text-base">Final Amount:</p>
-                    <p className="text-right text-gray-800 font-semibold text-base">${transaction.finalAmount.toFixed(2)}</p>
+                    <p className="text-gray-600 font-medium">Verified At:</p>
+                    <p className="text-right text-gray-800 text-xs">
+                        {transaction.verified_at 
+                            ? new Date(transaction.verified_at).toLocaleString()
+                            : 'N/A'}
+                    </p>
+
+                    <p className="text-gray-600 font-medium">Refunded:</p>
+                    <p className="text-right text-gray-800">
+                        {transaction.refunded_at ? "Yes" : "No"}
+                    </p>
+
+                    <p className="text-gray-800 font-semibold text-base border-t-2 pt-2 col-span-2">
+                        Final Amount: <span className="text-right">{transaction.currency} {transaction.finalAmount.toFixed(2)}</span>
+                    </p>
                 </div>
+
+                {/* Close Button at Bottom */}
+                <button
+                    onClick={handleClose}
+                    className="w-full mt-6 px-4 py-2 bg-[#4B697F] text-white rounded hover:bg-opacity-90 transition"
+                >
+                    Close
+                </button>
             </div>
         </div>
     );

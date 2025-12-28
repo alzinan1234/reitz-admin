@@ -1,7 +1,15 @@
-"use client"; // This directive is required for client-side functionality in App Router components
+// ============================================
+// FILE: app/pages/login/page.js
+// Purpose: Login Page with Complete API Integration
+// ============================================
 
+"use client";
+
+import { loginUser } from "@/components/lib/apiClient";
+import Link from "next/link";
 import React, { useState } from "react";
 import toast, { Toaster } from "react-hot-toast";
+
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -12,8 +20,8 @@ export default function LoginPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError(""); // Clear previous errors
-    setLoading(true); // Indicate loading state
+    setError("");
+    setLoading(true);
 
     // --- Client-side validation ---
     if (!email || !password) {
@@ -31,51 +39,31 @@ export default function LoginPage() {
       return;
     }
 
-    // --- Simulate API Call (Replace with your actual backend call) ---
-    console.log("Attempting to log in with:", { email, password, rememberMe });
-
     try {
-      await new Promise((resolve) => setTimeout(resolve, 1500)); // Simulate network delay
+      // Call login API
+      const response = await loginUser(email, password);
 
-      let success = false;
-      let redirectPath = "/";
-      let token = ""; // To store the token for setting in cookie
+      if (response.success) {
+        toast.success("Login Successful!");
 
-      // --- Simulated Admin Login ---
-      if (email === "admin@example.com" && password === "admin123") {
-        console.log("Admin Login successful!");
-        toast.success("Admin Login Successful! (Simulated)");
-        token = "ADMIN_TOKEN_SECRET"; // Set admin token
-        redirectPath = "/admin"; // Redirect admin to /admin
-        success = true;
-      }
-      // --- Simulated Regular User Login ---
-      else if (email === "user@example.com" && password === "password123") {
-        console.log("User Login successful!");
-        toast.success("User Login Successful! (Simulated)");
-        token = "USER_TOKEN_SECRET"; // Set regular user token
-        redirectPath = "/admin";
-        success = true;
-      }
-      // --- Simulated Failed Login ---
-      else {
-        setError("Invalid email or password. (Simulated)");
-        toast.error("Invalid email or password. (Simulated)");
-      }
-
-      if (success) {
-        document.cookie = `token=${token}; path=/; max-age=${
-          rememberMe ? 60 * 60 * 24 * 30 : 60 * 30
-        }; SameSite=Lax`;
-        // Use standard window navigation instead of Next.js router
-        window.location.href = redirectPath;
+        // Token is automatically stored in cookie by loginUser function
+        
+        // Redirect based on user role
+        const redirectPath = response.data?.user?.role === "admin" ? "/admin" : "/admin";
+        setTimeout(() => {
+          window.location.href = redirectPath;
+        }, 1000);
+      } else {
+        setError(response.message || "Login failed. Please try again.");
+        toast.error(response.message || "Login failed. Please try again.");
       }
     } catch (err) {
       console.error("Login error:", err);
-      setError("An unexpected error occurred. Please try again.");
-      toast.error("An unexpected error occurred. Please try again.");
+      const errorMessage = err.message || "An unexpected error occurred. Please try again.";
+      setError(errorMessage);
+      toast.error(errorMessage);
     } finally {
-      setLoading(false); // End loading state
+      setLoading(false);
     }
   };
 
@@ -83,10 +71,9 @@ export default function LoginPage() {
     <div className="flex min-h-screen bg-gray-50">
       <Toaster position="top-center" reverseOrder={false} />
 
-      {/* Left Red Panel */}
+      {/* Left Beige Panel */}
       <div className="hidden lg:flex w-1/2 bg-[#E7DCD3] items-center justify-center p-8">
         <div className="text-center">
-          {/* Replaced src with a placeholder. Update with your actual image path in the /public folder. */}
           <img
             src="/login-image.png"
             alt="TikaFood Logo"
@@ -101,11 +88,10 @@ export default function LoginPage() {
 
       {/* Right Login Panel */}
       <div className="w-full lg:w-1/2 bg-white flex items-center justify-center p-4 sm:p-8">
-        {/* Applying new styles to the login form container */}
-        <div className=" md:w-[564px] bg-white p-10 rounded-[15px] flex flex-col justify-center items-center gap-10">
+        <div className="md:w-[564px] bg-white p-10 rounded-[15px] flex flex-col justify-center items-center gap-10">
           <div className="self-stretch flex flex-col justify-start items-center gap-[30px]">
             <div className="self-stretch flex flex-col justify-center items-center gap-[30px]">
-              <div className="w-full  flex flex-col justify-start items-center gap-[18px]">
+              <div className="w-full flex flex-col justify-start items-center gap-[18px]">
                 <h2 className="self-stretch text-center text-[#486583] text-2xl font-bold font-[Open_Sans]">
                   Login to Account
                 </h2>
@@ -115,7 +101,7 @@ export default function LoginPage() {
               </div>
               <form
                 onSubmit={handleSubmit}
-                className="w-full  flex flex-col items-end gap-[18px]"
+                className="w-full flex flex-col items-end gap-[18px]"
               >
                 <div className="self-stretch flex flex-col justify-start items-start gap-[18px]">
                   {/* Email Input */}
@@ -124,7 +110,7 @@ export default function LoginPage() {
                       htmlFor="email"
                       className="self-stretch text-[#5C5C5C] text-sm font-normal font-[Open_Sans]"
                     >
-                      Email adress
+                      Email Address
                     </label>
                     <input
                       type="email"
@@ -170,7 +156,6 @@ export default function LoginPage() {
                       onChange={(e) => setRememberMe(e.target.checked)}
                     />
                     <div className="w-[18px] h-[18px] bg-white peer-checked:bg-[#486583] rounded-[2px] border border-[#DCDCDC] peer-checked:border-[#486583] flex items-center justify-center relative">
-                      {/* Custom checkmark */}
                       {rememberMe && (
                         <svg
                           className="w-3 h-3 text-white absolute"
@@ -187,16 +172,16 @@ export default function LoginPage() {
                       Remember Password
                     </span>
                   </label>
-                  <a
-                    href="/Forgot-Password"
+                  <Link
+                    href="/forgot-password"
                     className="text-[#BB2821] text-xs font-normal font-[Open_Sans] hover:underline"
                   >
                     Forgot Password?
-                  </a>
+                  </Link>
                 </div>
 
                 {error && (
-                  <p className="text-red-500 text-sm text-center mt-2 font-[Open_Sans]">
+                  <p className="text-red-500 text-sm text-center mt-2 font-[Open_Sans] w-full">
                     {error}
                   </p>
                 )}

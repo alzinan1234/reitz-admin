@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { Geist, Geist_Mono } from 'next/font/google';
+import { Toaster } from 'react-hot-toast';
 import './admin.css';
 import Sidebar from '@/components/Sidebar';
 import Topbar from '@/components/Topbar';
@@ -42,6 +43,32 @@ export default function RootLayout({ children }) {
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
+        <Toaster
+          position="top-center"
+          reverseOrder={false}
+          gutter={8}
+          toastOptions={{
+            duration: 3000,
+            style: {
+              background: '#363636',
+              color: '#fff',
+            },
+            success: {
+              duration: 2500,
+              theme: {
+                primary: '#10b981',
+                secondary: '#fff',
+              },
+            },
+            error: {
+              duration: 3500,
+              theme: {
+                primary: '#ef4444',
+                secondary: '#fff',
+              },
+            },
+          }}
+        />
         <div className="flex  text-white min-h-screen">
           <Sidebar isOpen={isOpen} setIsOpen={setIsOpen} />
 

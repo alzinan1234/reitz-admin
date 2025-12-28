@@ -82,7 +82,7 @@ export default function SetNewPasswordPage() {
         <div className="text-center">
           {/* Replaced src with a placeholder. Update with your actual image path in the /public folder. */}
           <img
-            src="/TikaFood-image.png"
+            src="/login-image.png"
             alt="TikaFood Logo"
             className="mx-auto mb-4 max-w-full h-auto"
             onError={(e) => {

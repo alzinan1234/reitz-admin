@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { MagnifyingGlassIcon } from '@heroicons/react/24/outline';
+import toast from 'react-hot-toast';
 import { getEventProposals, processEventAction } from '../lib/eventApiClient';
 
 const EventProposals = () => {
@@ -38,11 +39,12 @@ const EventProposals = () => {
   }, [searchTerm, events]);
 
   const handleAction = async (id, action) => {
-    if (confirm(`Are you sure you want to ${action} this event?`)) {
-      try {
-        await processEventAction(id, action);
-        fetchEvents(); 
-      } catch (err) { alert("Failed to update status"); }
+    try {
+      await processEventAction(id, action);
+      toast.success(`Event ${action}ed successfully!`);
+      fetchEvents(); 
+    } catch (err) { 
+      toast.error("Failed to update status");
     }
   };
 
@@ -86,13 +88,13 @@ const EventProposals = () => {
                   <td className="py-4 px-6 text-gray-600">{event.location}</td>
                   <td className="py-4 px-6 text-gray-600">{event.contactNumber}</td>
                   <td className="py-4 px-6">
-                    <span className={`px-3 py-1 rounded-full text-xs text-white ${event.status === 'Pending' ? 'bg-orange-500' : 'bg-green-500'}`}>
+                    <span className={`px-3 py-1 rounded-full text-xs text-white ${event.status === 'Pending' ? 'bg-orange-500' : event.status === 'Rejected' ? 'bg-red-500' : 'bg-green-500'}`}>
                       {event.status}
                     </span>
                   </td>
                   <td className="py-4 px-6 flex justify-center gap-3">
                     <button onClick={() => handleAction(event.id, 'approve')} className="p-2 bg-green-500 text-white rounded-full transition-transform hover:scale-110"><CheckIcon /></button>
-                    <button onClick={() => handleAction(event.id, 'reject')} className="p-2 bg-red-500 text-white rounded-full transition-transform hover:scale-110"><CrossIcon /></button>
+                    <button onClick={() => handleAction(event.id, 'reject')} className="p-2 bg-red-700 text-white rounded-full transition-transform hover:scale-110"><CrossIcon /></button>
                     <button onClick={() => router.push(`/admin/event-proposals/${event.id}`)} className="p-2 bg-purple-500 text-white rounded-full transition-transform hover:scale-110"><EyeIcon /></button>
                   </td>
                 </tr>

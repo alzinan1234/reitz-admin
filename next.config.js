@@ -6,7 +6,8 @@ const nextConfig = {
       "via.placeholder.com",
       "images.unsplash.com",
       "placehold.co",
-      "atm-reply-cast-shipment.trycloudflare.com"
+      "atm-reply-cast-shipment.trycloudflare.com",
+      "pose-rejected-best-fleece.trycloudflare.com"
     ],
   },
 };

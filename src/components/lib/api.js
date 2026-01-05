@@ -3,7 +3,7 @@
 // Purpose: Centralized API Configuration & Endpoints
 // ============================================
 
-const API_BASE_URL = "https://pose-rejected-best-fleece.trycloudflare.com";
+const API_BASE_URL = "https://shoppassport.onrender.com";
 
 export const API_ENDPOINTS = {
   // Authentication Endpoints

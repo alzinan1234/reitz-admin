@@ -26,9 +26,11 @@ export default function MetricCard({
   const [percentageDirection, setPercentageDirection] = useState('up');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [isHydrated, setIsHydrated] = useState(false);
 
   // Fetch data on mount
   useEffect(() => {
+    setIsHydrated(true);
     fetchMetricData();
   }, [dataKey, selectedPeriod]);
 
@@ -72,6 +74,10 @@ export default function MetricCard({
   const ChangeIcon = percentageDirection === 'up' ? ChevronUpIcon : ChevronDownIcon;
   const changeColor = percentageDirection === 'up' ? 'text-green-600' : 'text-red-600';
   const changeBg = percentageDirection === 'up' ? 'bg-green-100' : 'bg-red-100';
+
+  if (!isHydrated) {
+    return null;
+  }
 
   return (
     <div style={{ boxShadow: '0px 4px 14.7px 0px rgba(0, 0, 0, 0.25)' }} className="w-full h-full bg-white p-6 border border-gray-200/80 rounded-xl flex flex-col justify-between shadow-sm">

@@ -29,9 +29,11 @@ export default function EarningSummaryChart() {
   const [error, setError] = useState(null);
   const [revenueGrowth, setRevenueGrowth] = useState(0);
   const [availableYears, setAvailableYears] = useState(['2025']);
+  const [isHydrated, setIsHydrated] = useState(false);
 
   // Fetch earnings data on mount
   useEffect(() => {
+    setIsHydrated(true);
     fetchEarningsData();
   }, []);
 
@@ -76,6 +78,10 @@ export default function EarningSummaryChart() {
 
   // Filter data by selected year
   const filteredData = chartData.filter(item => item.year.toString() === selectedYear);
+
+  if (!isHydrated) {
+    return null;
+  }
 
   return (
     <div style={{ boxShadow: '0px 4px 14.7px 0px rgba(0, 0, 0, 0.25)' }} className="w-full h-full p-2.5 bg-white rounded-lg flex flex-col justify-start items-center gap-5 text-black">
@@ -154,14 +160,14 @@ export default function EarningSummaryChart() {
               <XAxis
                 dataKey="name"
                 stroke="#ccc"
-                tick={{ fill: 'black', fontSize: 13.71, fontFamily: 'Roboto', fontWeight: 400 }}
+                tick={{ fill: 'black', fontSize: 13.71, fontWeight: 400 }}
                 axisLine={false}
                 tickLine={false}
               />
               <YAxis
                 stroke="#ccc"
                 tickFormatter={formatYAxisTick}
-                tick={{ fill: 'black', fontSize: 12.56, fontFamily: 'Roboto', fontWeight: 400 }}
+                tick={{ fill: 'black', fontSize: 12.56, fontWeight: 400 }}
                 axisLine={false}
                 tickLine={false}
                 domain={[0, 'dataMax + 5000']}

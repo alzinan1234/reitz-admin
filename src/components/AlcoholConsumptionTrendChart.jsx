@@ -92,14 +92,14 @@ export default function AlcoholConsumptionTrendChart() {
             <XAxis
               dataKey="name"
               stroke="#ccc"
-              tick={{ fill: 'white', fontSize: 12, fontFamily: 'Roboto', fontWeight: 400 }}
+              tick={{ fill: 'white', fontSize: 12, fontWeight: 400 }}
               axisLine={false}
               tickLine={false}
             />
             <YAxis
               stroke="#ccc"
               tickFormatter={formatYAxisTick}
-              tick={{ fill: 'white', fontSize: 12, fontFamily: 'Roboto', fontWeight: 400 }}
+              tick={{ fill: 'white', fontSize: 12, fontWeight: 400 }}
               axisLine={false}
               tickLine={false}
               domain={[0, 15000]} // Set domain to match image

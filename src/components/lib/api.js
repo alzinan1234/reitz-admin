@@ -3,7 +3,7 @@
 // Purpose: Centralized API Configuration & Endpoints
 // ============================================
 
-const API_BASE_URL = "https://shoppassport.onrender.com";
+const API_BASE_URL = "https://api.shophopapp.com";
 
 export const API_ENDPOINTS = {
   // Authentication Endpoints

@@ -8,7 +8,8 @@ const nextConfig = {
       "placehold.co",
       "atm-reply-cast-shipment.trycloudflare.com",
       "pose-rejected-best-fleece.trycloudflare.com",
-      "shoppassport.onrender.com"
+      "shoppassport.onrender.com",
+      "api.shophopapp.com"
     ],
   },
 };

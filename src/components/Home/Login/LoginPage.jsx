@@ -172,12 +172,12 @@ export default function LoginPage() {
                       Remember Password
                     </span>
                   </label>
-                  <a
+                  <Link
                     href="/forgot-password"
                     className="text-[#BB2821] text-xs font-normal font-[Open_Sans] hover:underline"
                   >
                     Forgot Password?
-                  </a>
+                  </Link>
                 </div>
 
                 {error && (
